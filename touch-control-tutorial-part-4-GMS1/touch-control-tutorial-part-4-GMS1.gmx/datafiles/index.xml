@@ -1,0 +1,9 @@
+<entries>
+	<!-- Picture to be used in Tutorials dialog box -->
+	<Bitmap>GamePreview.png</Bitmap>
+	<!-- Text to be used in Tutorials dialog box -->
+	<Text>Analogue_Sticks</Text>
+	<!-- GMZ to be used as template -->
+	<GMZ>TouchControls_pt4.gmz</GMZ>
+	<Parent>Intermediate\Touch</Parent>		
+</entries>

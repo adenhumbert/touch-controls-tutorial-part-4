@@ -1,0 +1,327 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>GameMaker Tutorial</title>
+		<meta http-equiv="X-UA-Compatible" content="IE=9" />
+		<link rel="stylesheet" href="../style.css" type="text/css" media="screen" title="style" charset="utf-8"/>
+	</head>
+<body>
+
+<img class="center" src="GamePreview.png">
+
+The previous tutorial in this series showed how to use "pinching" on a touch screen device to zoom and rotate a view. If you went through it correctly, then you have a little game with some virtual keys to 
+move the character and a moving view, but you will have noticed that the controls are not very good! Virtual keys are fine for some games, like platformers for example, but for others you really need the freedom 
+of movement that an analogue joystick or gamepad gives.
+<br>
+<br>
+
+In this tutorial we are going to add analogue-style controls to the game to make the movement and game play more natural and fluid. Since this is a top-down shooting game, we will add two joysticks to it - one to 
+control the player movement, and another to control the player shooting direction, so that with the left and right thumbs you can move and shoot easily.
+<br>
+<br>
+
+<h2>Scripts</h2>
+Before getting started with the object codes for this, we need to create two scripts for our game. these scripts are necessary due to the fact that we will be drawing our virtual analogue controllers onto the GUI 
+layer of the screen, and so we need to convert <b>raw</b> mouse positions into relative gui positions. This is because in our test game the GUI layer is probably <i>not</i> the same resolution as the actual 
+screen of the device that will be testing it.
+<br>
+<br>
+
+So create a new script resource by <i>right-clicking</i> on the <b>Scripts</b> folder from the <b>Resource Tree</b> and selecting "Create Script".
+
+<img class="center" src="TC_Image_1.png">
+
+Call this new script <tt>scr_mouse_gui_x</tt> and add the following:
+<br>
+<br>
+
+<code>
+if os_type == os_windows || os_type == os_linux || os_type == os_macosx<br>
+&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;return display_get_gui_width() * (argument0 / window_get_width());<br>
+&nbsp;&nbsp;&nbsp;}<br>
+else<br>
+&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;return display_get_gui_width() * (argument0 / display_get_width());<br>
+&nbsp;&nbsp;&nbsp;}<br>
+</code>
+<br>
+
+Now create another script and call it <tt>scr_mouse_gui_y</tt> and add this:
+<br>
+<br>
+
+<code>
+if os_type == os_windows || os_type == os_linux || os_type == os_macosx<br>
+&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;return display_get_gui_height() * (argument0 / window_get_height());<br>
+&nbsp;&nbsp;&nbsp;}<br>
+else<br>
+&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;return display_get_gui_height() * (argument0 / display_get_height());<br>
+&nbsp;&nbsp;&nbsp;}<br>
+</code>
+<br>
+
+These two scripts can now be called like regular functions to get the GUI layer x and y coordinates from the raw mouse position in our game. Note that we have OS checks in there, since on Windows and other 
+desktop targets we need to use the <b>window</b> resolution, while on devices we need the <b>display</b> resolution.
+<br>
+<br>
+
+<h2>Movement</h2>
+With those scripts ready, we can now move on to making the player move. So open up <b>obj_Player</b> now.
+<br>
+<br>
+
+We are going to have to create a number of new variables for this object, and they will be used to do the calculations necessary to translate the mouse position into movement, as well as for drawing the controls 
+on the screen (which for simplicity we are also going to do in this object).
+<br>
+<br>
+
+Open up the <b>Create Event</b> and add the following:
+<br>
+<br>
+
+<code>
+gui_x[0] = 64;
+gui_y[0] = (display_get_gui_height() - 64);
+gui_x[1] = (display_get_gui_width() - 64);
+gui_y[1] = (display_get_gui_height() - 64);
+stick_x[0] = gui_x[0];
+stick_y[0] = gui_y[0];
+stick_x[1] = gui_x[1];
+stick_y[1] = gui_y[1];
+st_pressed[0] = -1;
+st_pressed[1] = -1;
+st_radius = 40;
+vdir = 0;
+</code>
+<br>
+
+As you can see, we have created a couple of <a href="http://docs.yoyogames.com/source/dadiospice/002_reference/001_gml%20language%20overview/401_06_arrays.html" target="_blank">arrays</a> to hold some 
+x and y coordinates. We could use simple variables and make them all different for each value we wish to store, but often it is easier to code an array to "group" multiple values under the same variable. In this case 
+we will use the array [0] for the left stick, and array [1] for the right stick (which we will add later in this tutorial).
+<br>
+<br>
+
+Let's go through those variables one at a time so that you can see what's going on and get an idea of how everything will hold together:
+<ul>
+	<li><tt>gui_x/y</tt>: These arrays hold the position on the GUI layer that we will consider as the "center" position. They will be used to calculate movement and we are going to use them to draw the base images 
+	of the analogue stick on the screen.
+	<li><tt>stick_x/y</tt>: This array will hold the position of the analogue stick <i>while it is being moved by the player</i>, as well as for drawing the stick "head" on the screen.
+	<li><tt>st_pressed</tt>: We will use this variable to check for a touch on the screen to use the analogue stick.
+	<li><tt>st_radius</tt>: This is the radius (in pixels) of the analogue stick base, and will be used to control the maximum movement of the stick from the base position.
+	<li><tt>vdir</tt>: We also want the stick movement to control the direction that the player is facing, so this will be used to set the image angle <i>only</i> when the stick is being used.
+</ul>
+
+With that done, you need to open up the <b>Step Event</b> of the object and remove a few lines of code, specifically those shown in the image below:
+
+<img class="center" src="TC_Image_2.png">
+
+That removes the keyboard control, and we can now add into the same position our analog stick controls. We will do this in two parts, with the first part of the code detecting <i>which</i> finger is over the 
+controller and then storing that value in our array "<tt>st_pressed</tt>". If the screen is not being touched (at the stick position) then this array will hold the value of -1. The second part of the code will then be 
+used to get the position of any detected touch relative to the base GUI position (as defined in the array "<tt>gui_x/y</tt>") and set the player horizontal and vertical speed values.
+<br>
+<br>
+
+So let's add that first part of the code into our <b>Step Event</b> now (in the same place that you previously removed the keyboard code):
+<br>
+<br>
+
+<code>
+stick_x[0] = gui_x[0];<br>
+stick_y[0] = gui_y[0];<br>
+if st_pressed[0] = -1<br>
+&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;for (i = 0; i &lt; 5; i++;)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if device_mouse_check_button(i, mb_left)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;var tx, ty;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tx = scr_mouse_gui_x(device_mouse_raw_x(i));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ty = scr_mouse_gui_y(device_mouse_raw_y(i));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if point_distance(tx, ty, gui_x[0], gui_y[0]) &lt; st_radius<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if st_pressed[1] != i
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;st_pressed[0] = i;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;}<br>
+</code>
+<br>
+
+We now have a code block that, if there is no current touch on the left stick, loops through the five possible touch points and checks to see if there is a finger there (making sure that it is not the same finger as the 
+one using the shoot controller). If there is a touch within the given radius from the base gui x/y point, that touch is detected and the "finger" number stored. Note that it uses our scripts to convert the "raw" mouse 
+position on the screen into the correct GUI layer position.
+<br>
+<br>
+
+The second code block is slightly more complicated and should be placed directly below the one above. We will break it into parts, and explain each bit as we go along. Start the code block with this:
+<br>
+<br>
+
+<code>
+if device_mouse_check_button(st_pressed[0], mb_left)<br>
+&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;var spd, vdist, mx, my;<br>
+&nbsp;&nbsp;&nbsp;mx = scr_mouse_gui_x(device_mouse_raw_x(st_pressed[0]));<br>
+&nbsp;&nbsp;&nbsp;my = scr_mouse_gui_y(device_mouse_raw_y(st_pressed[0]));<br>
+</code>
+<br>
+
+We first check to see if the previously stored "finger" is still touching the screen. If it is, we prepare some local variables and then get the mouse position on the GUI layer. Next we need to put:
+<br>
+<br>
+
+<code>
+&nbsp;&nbsp;&nbsp;vdist = min(st_radius, point_distance(mx, my, gui_x[0], gui_y[0]));<br>
+&nbsp;&nbsp;&nbsp;vdir = point_direction(gui_x[0], gui_y[0], mx, my);<br>
+</code>
+<br>
+
+These two lines capture the distance that the stick has been moved, limiting it to the radius value we set in the <b>Create Event</b>, and also gets the direction that it has been moved in. Both these 
+values will now be used to calculate the movement speed:
+<br>
+<br>
+
+<code>
+&nbsp;&nbsp;&nbsp;spd = min(b_spd, vdist / 10);<br>
+&nbsp;&nbsp;&nbsp;h_spd = lengthdir_x(spd, vdir);<br>
+&nbsp;&nbsp;&nbsp;v_spd = lengthdir_y(spd, vdir);<br>
+</code>
+<br>
+
+This sets the local "spd" variable to a value that is limited to a maximum speed set by the base speed ("b_spd"), and then uses this value to get the component horizontal and vertical speed from the speed/direction 
+vector. These two values are then used (as they were before for the keyboard) in the movement code of this object.
+<br>
+<br>
+
+Finally, to finish this code block we have this:
+<br>
+<br>
+
+<code>
+&nbsp;&nbsp;&nbsp;stick_x[0] = gui_x[0] + lengthdir_x(vdist, vdir);<br>
+&nbsp;&nbsp;&nbsp;stick_y[0] = gui_y[0] + lengthdir_y(vdist, vdir);<br>
+&nbsp;&nbsp;&nbsp;}<br>
+else st_pressed[0] = -1<br>
+</code>
+<br>
+
+This sets the "stick" array to hold the current position for drawing the stick "head" in the <b>Draw GUI</b> event, and it also resets the "st_pressed" variable to -1 if the player lifts the finger being used from the 
+screen.
+<br>
+<br>
+
+One final change needs to be made here, and that is to the code that changes the image angles of the body. Simply change the <tt>point_direction()</tt> function in the code (highlighted below) to be the instance 
+variable "vdir", as this will make the player point in the correct direction when the stick is being moved.
+
+<img class="center" src="TC_Image_3.png">
+
+Before testing this, we need to add a <b>Draw GUI</b> event to draw the stick on the screen, so add one now, open up a code action, and add the following:
+<br>
+<br>
+
+<code>
+draw_set_alpha(0.75);<br>
+draw_circle_color(gui_x[0], gui_y[0], st_radius, c_lime, c_lime, true);<br>
+draw_circle_color(stick_x[0], stick_y[0], 20, c_lime, c_lime, true);<br>
+draw_circle_color(gui_x[1], gui_y[1], st_radius, c_lime, c_lime, true);<br>
+draw_circle_color(stick_x[1], stick_y[1], 20, c_lime, c_lime, true);<br>
+draw_set_alpha(0.25);<br>
+draw_circle_color(gui_x[0], gui_y[0], st_radius, c_lime, c_lime, false);<br>
+draw_circle_color(stick_x[0], stick_y[0], 20, c_lime, c_lime, false);<br>
+draw_circle_color(gui_x[1], gui_y[1], st_radius, c_lime, c_lime, false);<br>
+draw_circle_color(stick_x[1], stick_y[1], 20, c_lime, c_lime, false);<br>
+draw_set_alpha(1);<br>
+</code>
+<br>
+
+You can draw the stick in any way you choose, but for ease of programming we are going to draw simple shapes only. Note that we also draw the second stick (for shooting) although it is useless just now. You can test 
+the game now, and (even on Windows) touching the analogue stick control at the bottom of the screen should make the player move and turn.
+
+<img class="center" src="TC_Image_4.png">
+
+<h2>Shooting</h2>
+Now that we have an analogue stick for moving, we should add one in for shooting. This will permit the player to move in one direction and to shoot in another.
+<br>
+<br>
+
+The initial code is exactly the same as that for the left stick, in that it has to loop through the five possible "fingers" to see which is being pressed and store that value in the "st_pressed[1]" array. So, we need to insert 
+that check into our code, after the movement code block, but <i>before</i> the shooting.
+
+<img class="center" src="TC_Image_5.png">
+
+The code to add here is as follows:
+<br>
+<br>
+
+<code>
+stick_x[1] = gui_x[1]<br>
+stick_x[1] = gui_x[1]<br>
+if st_pressed[1] = -1<br>
+&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;for (i = 0; i &lt; 5; i++;)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if device_mouse_check_button(i, mb_left)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;var tx, ty;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tx = scr_mouse_gui_x(device_mouse_raw_x(i));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ty = scr_mouse_gui_y(device_mouse_raw_y(i));<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if point_distance(tx, ty, gui_x[1], gui_y[1]) &lt; st_radius<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if st_pressed[0] != i
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;st_pressed[1] = i;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;}<br>
+</code>
+<br>
+
+Now we need to change the actual shooting code directly after this to accept the touch on the stick and set the correct angles for shooting and drawing. We will be replacing the initial 
+<tt>mouse_check_button_check</tt> function with a device specific one and setting the stick array values like this:
+<br>
+<br>
+
+<code>
+if device_mouse_check_button(st_pressed[1], mb_left)<br>
+&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;var mx, my;<br>
+&nbsp;&nbsp;&nbsp;mx = scr_mouse_gui_x(device_mouse_raw_x(st_pressed[1]));<br>
+&nbsp;&nbsp;&nbsp;my = scr_mouse_gui_y(device_mouse_raw_y(st_pressed[1]));<br>
+&nbsp;&nbsp;&nbsp;vdist = min(st_radius, point_distance(mx, my, gui_x[1], gui_y[1]));<br>
+&nbsp;&nbsp;&nbsp;vdir = point_direction(gui_x[1], gui_y[1], mx, my);<br>
+&nbsp;&nbsp;&nbsp;stick_x[1] = gui_x[1] + lengthdir_x(vdist, vdir);<br>
+&nbsp;&nbsp;&nbsp;stick_y[1] = gui_y[1] + lengthdir_y(vdist, vdir);<br>
+&nbsp;&nbsp;&nbsp;if c_shoot<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;//the rest of the code as it is here<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;}<br>
+else st_pressed[1] = -1;<br>
+</code>
+<br>
+
+Test the game now and you should see that the left control moves the player and the right one makes him turn and shoot. Congratulations! You now have a working game with analogue style stick controls, which 
+completes this short series of tutorials on Touch Controls.
+<br>
+<br>
+<p>
+
+<h5>&copy; Copyright YoYo Games Ltd. 2015 All Rights Reserved</h5></body>
+</html>
+
+
+
+
+
+
+

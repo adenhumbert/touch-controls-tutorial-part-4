@@ -1,0 +1,11 @@
+draw_set_alpha(0.75);
+draw_circle_color(gui_x[0], gui_y[0], st_radius, c_lime, c_lime, true);
+draw_circle_color(stick_x[0], stick_y[0], 20, c_lime, c_lime, true);
+draw_circle_color(gui_x[1], gui_y[1], st_radius, c_lime, c_lime, true);
+draw_circle_color(stick_x[1], stick_y[1], 20, c_lime, c_lime, true);
+draw_set_alpha(0.25);
+draw_circle_color(gui_x[0], gui_y[0], st_radius, c_lime, c_lime, false);
+draw_circle_color(stick_x[0], stick_y[0], 20, c_lime, c_lime, false);
+draw_circle_color(gui_x[1], gui_y[1], st_radius, c_lime, c_lime, false);
+draw_circle_color(stick_x[1], stick_y[1], 20, c_lime, c_lime, false);
+draw_set_alpha(1);

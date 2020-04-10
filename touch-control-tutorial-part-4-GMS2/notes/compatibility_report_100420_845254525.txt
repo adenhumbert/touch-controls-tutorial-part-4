@@ -1,0 +1,72 @@
+Font font0 has been converted to font family Arial (Regular)
+GameMaker Studio 1 font texture has been backed up at ${project_dir}\fonts\font0\font0.gms1.png
+Converting GML script: ${project_dir}\objects\obj_Controller\Create_0.gml
+Converted builtin - line 8: view_wview[0] -> __view_get( e__VW.WView, 0 )
+Converted builtin - line 9: view_hview[0] -> __view_get( e__VW.HView, 0 )
+
+Converting GML script: ${project_dir}\objects\obj_Controller\Alarm_1.gml
+Converted description /// @description Spawn barrels
+
+Converting GML script: ${project_dir}\objects\obj_Controller\Step_0.gml
+Converted builtin - line 28: view_xview[0] = global.Player_x - (view_wview[0] / 2) -> __view_set( e__VW.XView, 0, global.Player_x - (view_wview[0] / 2) )
+Converted builtin - line 29: view_yview[0] = global.Player_y - (view_hview[0] / 2) -> __view_set( e__VW.YView, 0, global.Player_y - (view_hview[0] / 2) )
+Converted builtin - line 26: view_wview[0] = initial_w * v_scale -> __view_set( e__VW.WView, 0, initial_w * v_scale )
+Converted builtin - line 27: view_hview[0] = initial_h * v_scale -> __view_set( e__VW.HView, 0, initial_h * v_scale )
+Converted builtin - line 22: view_angle[0] -> __view_get( e__VW.Angle, 0 )
+Converted builtin - line 31: view_angle[0] = v_ang_prev + ang_dif -> __view_set( e__VW.Angle, 0, v_ang_prev + ang_dif )
+Converted builtin - line 28: view_wview[0] -> __view_get( e__VW.WView, 0 )
+Converted builtin - line 29: view_hview[0] -> __view_get( e__VW.HView, 0 )
+
+Converting GML script: ${project_dir}\objects\obj_Player\Alarm_1.gml
+Converted description /// @description Blood alarm
+
+Converting GML script: ${project_dir}\objects\obj_Player\Alarm_0.gml
+Converted description /// @description Can shoot alarm
+
+Converting GML script: ${project_dir}\objects\obj_Player\Step_0.gml
+Converted description /// @description Player Movement
+
+Converting GML script: ${project_dir}\objects\obj_Player\Collision_95f384b6-94c6-4ee1-ab02-a27eba7b4fc7.gml
+Converted description /// @description Collision checks
+
+Converting GML script: ${project_dir}\objects\obj_Player\Mouse_57.gml
+Converted description /// @description Shoot grenade
+
+Converting GML script: ${project_dir}\objects\obj_Player\Mouse_51.gml
+Converted description /// @description Grenade timer
+
+Converting GML script: ${project_dir}\objects\obj_Player\Other_0.gml
+Converted description /// @description Room loop
+
+Converting GML script: ${project_dir}\objects\obj_Player\Draw_0.gml
+Converted builtin - line 1: view_xview[0] = global.Player_x - (view_wview[0] * 0.5) -> __view_set( e__VW.XView, 0, global.Player_x - (view_wview[0] * 0.5) )
+Converted builtin - line 2: view_yview[0] = global.Player_y - (view_hview[0] * 0.5) -> __view_set( e__VW.YView, 0, global.Player_y - (view_hview[0] * 0.5) )
+Converted builtin - line 1: view_wview[0] -> __view_get( e__VW.WView, 0 )
+Converted builtin - line 2: view_hview[0] -> __view_get( e__VW.HView, 0 )
+
+macOS icon ${options_dir}\mac\icons\icon512.png written out as 32-bit
+Windows NSIS Installer Script has been set to default due to changes in GameMaker Studio 2
+Missing audiogroup for sound: 'snd_Footsteps' - setting to default audio group
+Missing audiogroup for sound: 'snd_Casing_Pistol' - setting to default audio group
+Missing audiogroup for sound: 'snd_GunShoot_Pistol' - setting to default audio group
+Missing audiogroup for sound: 'snd_Ricochet' - setting to default audio group
+Missing audiogroup for sound: 'snd_Blood_1' - setting to default audio group
+Missing audiogroup for sound: 'snd_Blood_2' - setting to default audio group
+Missing audiogroup for sound: 'snd_Blood_3' - setting to default audio group
+Missing audiogroup for sound: 'snd_Bones' - setting to default audio group
+Missing audiogroup for sound: 'snd_Bones_Fall' - setting to default audio group
+Missing audiogroup for sound: 'snd_Explosion_Huge' - setting to default audio group
+Missing audiogroup for sound: 'snd_Barrel_Hit' - setting to default audio group
+Missing audiogroup for sound: 'snd_Barrel_Spawn' - setting to default audio group
+Missing audiogroup for sound: 'snd_Explosion_Grenade' - setting to default audio group
+Game speed set to 60
+Added compatibility script 'draw/draw_set_blend_mode.gml'
+Added compatibility script 'instance/instance_create.gml'
+Added compatibility script 'object/object_get_depth.gml'
+Added compatibility script 'view/room_set_view.gml'
+Added compatibility script 'view/__view_get.gml'
+Added compatibility script 'view/__view_set.gml'
+Added compatibility script 'view/__view_set_internal.gml'
+Added compatibility script 'view/__init_view.gml'
+Added compatibility script '__init_global.gml'
+Added compatibility script '__global_object_depths.gml'
